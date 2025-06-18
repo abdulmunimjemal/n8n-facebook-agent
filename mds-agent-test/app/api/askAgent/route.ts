@@ -1,0 +1,42 @@
+// app/api/askAgent/route.ts
+import { type NextRequest, NextResponse } from 'next/server';
+
+// This function handles POST requests to the /api/askAgent endpoint
+export async function POST(req: NextRequest) {
+  // The n8n webhook URL. Because this code runs on the server,
+  // 'localhost' is correct and secure.
+  const webhookUrl = 'http://localhost:5678/webhook/ask';
+
+  try {
+    const requestBody = await req.json(); // Get the body from the incoming client request
+
+    // Forward the request body to the n8n webhook
+    const n8nResponse = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody), // Send the same body to n8n
+    });
+
+    if (!n8nResponse.ok) {
+      // If n8n gives an error, log it and return an error response
+      const errorText = await n8nResponse.text();
+      console.error(`n8n webhook failed with status: ${n8nResponse.status}`, errorText);
+      return new NextResponse(`Error from n8n webhook: ${errorText}`, { status: n8nResponse.status });
+    }
+
+    // Get the raw text response from n8n
+    const textData = await n8nResponse.json().then(data => data.output || 'No text response from n8n');
+
+    // Send the raw text back to the client
+    return new NextResponse(textData, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+
+  } catch (error: any) {
+    console.error('API Route Error:', error);
+    return new NextResponse(`Internal Server Error: ${error.message}`, { status: 500 });
+  }
+}
