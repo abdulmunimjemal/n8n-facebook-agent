@@ -1,0 +1,310 @@
+{
+  "name": "MDS Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2c97d0f3-49a6-474e-af12-05b68ea08120",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        320
+      ],
+      "webhookId": "a889d2ae-2159-402f-b326-5f61e90f602e"
+    },
+    {
+      "parameters": {
+        "content": "## Start by saying 'hi'\n![Button](https://i.imgur.com/PrIBJI6.png)",
+        "height": 149,
+        "width": 150
+      },
+      "id": "330f5417-be02-4497-bcef-563aadfb4269",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "model": "o3-mini",
+        "options": {}
+      },
+      "id": "81e54efd-1c73-4e61-9445-efca7a11ddd3",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        620,
+        400
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "70pK8Uc9sjMG7WxB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A user has posted the following question in a Facebook group for Amazon sellers:\n\n\"{{$json['chatInput']}}\"\n\nPlease first call the Pinecone vector database to retrieve relevant context posts based on the user's question. Use semantic similarity to return the most relevant 3–5 discussions from previous group posts.\n\nOnce the context has been retrieved, use it to write a helpful, friendly, and professional Facebook comment that answers the user's question. If relevant information is found, incorporate it naturally. If not, provide a concise and practical answer based on best practices and common experience in the Amazon selling community.\n\nYour reply should be clear, actionable, and formatted naturally for a Facebook comment (2–5 sentences). Your answer must reference the specific post URLs.\n",
+        "options": {
+          "systemMessage": "=You are an AI assistant for an eCommerce-focused Facebook group, helping users by replying directly to their questions with useful, experience-based answers.\n\nYou have access to a vector-based knowledge base of previous posts from the group. When a user asks a question, your task is to check if a similar question has been asked and answered before. If so, use that information to construct a helpful, relevant reply based on prior knowledge.\n\nThe context you receive from the retrieval step consists of previous Facebook posts from the group. When you use information from these posts in your answer, you must clearly cite them (e.g., “According to a previous post: ...” or “As discussed in an earlier group post: ...”). Use the metadata provided (such as poster name, year, or post URL) to make your citations specific and credible.\n\nIf no similar information is available, provide a new, thoughtful, and actionable response using your general understanding of Amazon selling, logistics, certifications, advertising, FBM/FBA, and related topics.\n\nAlways keep replies:\n- Clear, concise, and conversational.\n- Directly helpful to the original question.\n- Community-minded — feel like peer advice, not a corporate message.\n- Credible and grounded (don’t make up product names, certifications, or laws).\n\nIf you reference previous posts, do not copy them verbatim — summarize or rephrase for clarity and helpfulness, and always cite the source post."
+        }
+      },
+      "id": "f0ba889c-ddfa-434f-bd54-108182f340cf",
+      "name": "Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        660,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {
+          "dimensions": 3072
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1000,
+        440
+      ],
+      "id": "f8f6765f-25c3-4dd2-88ab-27b85e8d0b62",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "70pK8Uc9sjMG7WxB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        780,
+        400
+      ],
+      "id": "00c12c07-7d1f-4543-98cb-ae514ceeccde",
+      "name": "n8n Memory"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ask",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "15e39f56-3eb7-46eb-9fd2-59c4ce8151f8",
+      "name": "Webhook",
+      "webhookId": "4a763fed-0c36-4fc3-b165-916e166238ff"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aaedd89e-d517-44c6-84bf-7020b137fff5",
+              "name": "sessionId",
+              "value": "={{  $json[\"body\"][\"sessionId\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "d0d903df-101b-4960-8ff6-1ed28ae9db78",
+              "name": "action",
+              "value": "={{  $json[\"body\"][\"action\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a0436e6f-50bc-46ad-b695-c1dcddfff563",
+              "name": "=chatInput",
+              "value": "={{ $json[\"body\"][\"q\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "3ec26be1-c5c0-4f58-a4de-a1b20a6e1792",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        0
+      ],
+      "id": "7d2bec8d-0c7c-4f08-a630-fbab2fe924a7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.toJsonString($json.output)}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1300,
+        20
+      ],
+      "id": "8db098b3-77b8-4487-a55f-536875e06c98",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "fb_group_data",
+        "toolDescription": "Retrieve the fb-group-data vector store to get best context about the users' question.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "fb-group-data",
+          "mode": "list",
+          "cachedResultName": "fb-group-data"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        300
+      ],
+      "id": "27eee3f3-aec2-4a18-888f-c49eb0942d29",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "rkqbXGpmjPXXVnLn",
+          "name": "PineconeApi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c85fc9bf-170a-4d54-ac2d-c252ec501e70",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "42b0101080bd0d0b4c368de6e7b7540d1f1f93adf8c9da08915b45653da3e05a"
+  },
+  "id": "NPctMgggH3wE8DXH",
+  "tags": []
+}
