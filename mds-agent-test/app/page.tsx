@@ -12,8 +12,8 @@ const MDSResponseRenderer = ({ text }: { text: string }) => {
   const parts: React.ReactNode[] = [];
   let currentIndex = 0;
   
-  // Strict markdown link parser: [text](url)
-  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  // Updated regex to handle URLs without protocol
+  const linkRegex = /\[([^\]]+)\]\(((?:https?:\/\/)?[^\s)]+)\)/g;
   
   let match;
   while ((match = linkRegex.exec(text)) !== null) {
@@ -21,10 +21,16 @@ const MDSResponseRenderer = ({ text }: { text: string }) => {
       parts.push(text.substring(currentIndex, match.index));
     }
     
+    // Add protocol if missing
+    let url = match[2];
+    if (!url.startsWith('http')) {
+      url = 'https://' + url;
+    }
+    
     parts.push(
       <a
         key={match.index}
-        href={match[2]}
+        href={url}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors duration-200"
@@ -119,7 +125,7 @@ export default function MDSAgentTestInterface() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about Amazon FBA, certifications, or seller strategies..."
+              placeholder="Ask ..."
               disabled={isLoading}
               maxLength={500}
               autoFocus
@@ -190,26 +196,7 @@ export default function MDSAgentTestInterface() {
               </li>
             </ul>
           </div>
-          
-          <div className="p-4 bg-gray-900/40 rounded-lg border border-gray-700">
-            <h3 className="font-semibold text-gray-300 mb-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Current Features
-            </h3>
-            <ul className="text-sm text-gray-400">
-              <li className="flex items-start">
-                <span className="text-green-400 mr-1">•</span> Markdown link parsing
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-400 mr-1">•</span> JSON response handling
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-400 mr-1">•</span> Session-based testing
-              </li>
-            </ul>
-          </div>
+
         </div>
 
         {error && (

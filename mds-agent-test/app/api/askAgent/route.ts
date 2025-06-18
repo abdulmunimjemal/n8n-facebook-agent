@@ -27,7 +27,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the raw text response from n8n
-    const textData = await n8nResponse.json().then(data => data.output || 'No text response from n8n');
+    let textData: string;
+    try {
+      textData = await n8nResponse.json().then(data => data.output || 'No text response from n8n');
+    } catch (jsonError) {
+      textData = await n8nResponse.text();
+      console.error('Failed to parse JSON from n8n response, falling back to text:', jsonError);
+      console.warn('Using raw text response from n8n:', textData);
+    }
 
     // Send the raw text back to the client
     return new NextResponse(textData, {
