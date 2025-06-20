@@ -34,5 +34,5 @@ jobs:
             set -e
             cd ~/mds-n8n-agent
             sudo kill -9 $(sudo lsof -t -i:3000) || true
-            docker-compose up --build -d
+            docker compose up --build -d
             echo "Deployment successful!"
