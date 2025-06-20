@@ -5,11 +5,11 @@ import { type NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   // The n8n webhook URL. Because this code runs on the server,
   // 'localhost' is correct and secure.
-  const webhookUrl = 'http://localhost:5678/webhook/ask';
+  const webhookUrl = 'http://n8n:5678/webhook/ask';
 
   try {
     const requestBody = await req.json(); // Get the body from the incoming client request
-
+    console.log('Received request body:', requestBody);
     // Forward the request body to the n8n webhook
     const n8nResponse = await fetch(webhookUrl, {
       method: 'POST',
@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(requestBody), // Send the same body to n8n
     });
 
+    console.log('n8n webhook response status:', n8nResponse.status);
     if (!n8nResponse.ok) {
       // If n8n gives an error, log it and return an error response
       const errorText = await n8nResponse.text();

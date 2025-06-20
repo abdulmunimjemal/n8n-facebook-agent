@@ -10,5 +10,14 @@ services:
     environment:
       - N8N_WEBHOOK_CORS_ALLOWED_ORIGINS=* #
 
+  mds-agent:
+    build: ./mds-agent-test
+    container_name: mds-agent
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - n8n
+
 volumes:
   n8n_data:
