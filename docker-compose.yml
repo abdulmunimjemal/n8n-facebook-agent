@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     environment:
       - N8N_WEBHOOK_CORS_ALLOWED_ORIGINS=* #
+      - N8N_SECURE_COOKIE=false
 
   mds-agent:
     build: ./mds-agent-test
